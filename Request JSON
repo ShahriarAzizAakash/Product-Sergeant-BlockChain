@@ -1,0 +1,82 @@
+Product Insertion:
+Path: /products/new
+Request Type: Post
+Headers:
+	Content-Type: application/json
+	Authorization: Bearer TOKEN
+
+{
+    "product": {
+        "name": "Pran Mango Juice",
+        "origin": "Bangladesh",
+        "vendor": "Pran Group",
+        "expiry_date": "30/12/2019",
+        "upc": "683974918229"
+    }
+}
+
+
+
+
+All Product:
+Path: /products
+Request Type: Get
+Headers:
+	Content-Type: application/json
+No JSON Required
+
+
+
+
+Product Search:
+Path: /products/find
+Request Type: Post
+Headers:
+	Content-Type: application/json
+	
+{
+	"upc": "12 digit UPC"
+}
+
+
+
+
+Login:
+path: /login
+Request Type: Post
+Headers:
+	Content-Type: application/json
+
+{
+	"email": "admin@pran.com",
+	"password": "123456"
+}
+
+
+
+Logout:
+path: /logout
+Request Type: Delete
+Headers:
+	Content-Type: application/json
+	Authorization: Bearer TOKEN
+
+
+
+Register:
+path: /company/register
+Request Type: Post
+Headers:
+	Content-Type: application/json
+
+{
+	"user":{
+		"company_name": "test",
+		"username": "test",
+		"email": "test@test.com",
+		"password": "123456",
+		"password_confirmation": "123456"
+	}
+}
+
+
