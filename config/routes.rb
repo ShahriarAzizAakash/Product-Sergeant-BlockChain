@@ -9,4 +9,6 @@ Rails.application.routes.draw do
   delete '/logout', controller: :signin, action: :destroy
 
   post '/company/register' => "users#create"
+
+  get '/block' => "productblock#index"
 end
