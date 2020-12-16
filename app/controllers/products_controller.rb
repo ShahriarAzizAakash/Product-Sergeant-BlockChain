@@ -9,10 +9,26 @@ class ProductsController < ApplicationController
     def search
         if Product.exists?(upc: params[:upc])
             @product = Product.find_by(upc: params[:upc])
-            render json: {product: @product}
+
             if @product.scanned != true
+                @block = Block.next(ProductBlock.last, @product.upc.to_s + "true", ProductBlock.last.hash_id)
+
+                @newblock = ProductBlock.new(
+                    previous_hash: @block.previous_hash,
+                    upc: @block.data,
+                    hash_id: @block.hash
+                )
+    
+                if @newblock.save 
+                    render json: {product: @product, block: @block}
+                else
+                    render json: {product: @product, message: "Could not create new block"}
+                end
                 @product.update_attribute(:scanned, true)
+            else 
+                render json: {product: @product}
             end
+
         else
             render json: {status: 404, message: "Not Found"}
         end
@@ -21,20 +37,39 @@ class ProductsController < ApplicationController
     def create 
         @product = Product.new(product_params)
 
-        @block = Block.next(ProductBlock.last, @product.upc.to_s, ProductBlock.last.hash_id)
+        if ProductBlock.last
+            @block = Block.next(ProductBlock.last, @product.upc.to_s, ProductBlock.last.hash_id)
 
-        @newblock = ProductBlock.new(
-            previous_hash: @block.previous_hash,
-            upc: @block.data,
-            hash_id: @block.hash
-        )
-        @product.brand = current_user.company_name
+            @newblock = ProductBlock.new(
+                previous_hash: @block.previous_hash,
+                upc: @block.data,
+                hash_id: @block.hash
+            )
+            @product.brand = current_user.company_name
 
 
-        if @product.save && @newblock.save
-            render json:{ status: 200, product: @product, block: @block}
+            if @product.save && @newblock.save
+                render json:{ status: 200, product: @product, block: @block}
+            else
+                render json: {message: "Could not create product!"}
+            end
         else
-            render json: {message: "Could not create product!"}
+            @product.brand = current_user.company_name
+
+            @block = Block.first(@product.upc)
+
+            @newblock = ProductBlock.new(
+                previous_hash: @block.previous_hash,
+                upc: @block.data,
+                hash_id: @block.hash
+            )
+
+
+            if @product.save && @newblock.save
+                render json:{ status: 200, product: @product, block: @block}
+            else
+                render json: {message: "Could not create product!"}
+            end
         end
         
     end
@@ -45,8 +80,11 @@ class ProductsController < ApplicationController
             params.require(:product).permit(:name, :vendor, :origin, :upc, :expiry_date)
         end
 end
+
+
+
+
 require "digest"
-require "pp"
 
 class Block
     attr_reader :id 
@@ -88,5 +126,9 @@ class Block
 
     def self.next(previous, data, previous_hash)
         Block.new(previous.id + 1, data, previous_hash)
+    end
+
+    def self.first(data)
+        Block.new(0, data, "0")
     end
 end
